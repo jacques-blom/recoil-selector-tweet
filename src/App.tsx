@@ -1,38 +1,47 @@
-import React from 'react'
+import React, {Suspense} from 'react'
 import './App.css'
-import {atom, selector, useRecoilState, useRecoilValue} from 'recoil'
+import {atom, selector, useRecoilValue} from 'recoil'
+import {getProfile} from './fakeApi'
 
-const passwordLengthState = selector({
-    key: 'passwordLength',
-    get: ({get}) => {
-        const password = get(passwordState)
-        return password.length
+const profileIdState = atom({
+    key: 'profileId',
+    default: 1,
+})
+
+const profileState = selector({
+    key: 'profile',
+    // ✨ The get function can be asynchronous
+    //   (i.e. it can return a Promise)
+    get: async ({get}) => {
+        const profileId = get(profileIdState)
+
+        const profile = await getProfile(profileId)
+        return profile
     },
 })
 
-const PasswordLength = () => {
-    const passwordLength = useRecoilValue(passwordLengthState)
+// ✨ This component will suspend while
+//    profileState's async get function resolves
+const Profile = () => {
+    const profile = useRecoilValue(profileState)
 
-    return <div>Password length: {passwordLength}</div>
-}
-
-const passwordState = atom({
-    key: 'password',
-    default: '',
-})
-
-const PasswordInput = () => {
-    const [password, setPassword] = useRecoilState(passwordState)
-
-    return <input value={password} onChange={(e) => setPassword(e.target.value)} />
+    return (
+        <div>
+            <div>ID: {profile.id}</div>
+            <div>Name: {profile.name}</div>
+            <div>Twitter: {profile.twitter}</div>
+            <div>Website: {profile.website}</div>
+        </div>
+    )
 }
 
 function App() {
     return (
-        <div className="App">
-            <PasswordInput />
-            <PasswordLength />
-        </div>
+        // ✨ Use a Suspense boundary to show a fallback while
+        //   Profile suspends.
+        <Suspense fallback={<div>Loading</div>}>
+            <Profile />
+        </Suspense>
     )
 }
 
