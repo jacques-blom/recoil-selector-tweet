@@ -1,84 +1,66 @@
-import React, {Suspense} from 'react'
+import React from 'react'
 import './App.css'
-import {
-    atom,
-    selectorFamily,
-    useRecoilCallback,
-    useRecoilStateLoadable,
-    useRecoilValue,
-    useRecoilValueLoadable,
-} from 'recoil'
-import {getProfile} from './fakeApi'
+import {atom, DefaultValue, selector, useRecoilState, useResetRecoilState} from 'recoil'
 
-const currentProfileIdState = atom({
-    key: 'profileId',
-    default: 1,
+const round = (n: number) => Math.round(n * 100) / 100
+const farenheitToCelsius = (f: number) => round(((f - 32) * 5) / 9)
+const celsiusToFarenheit = (c: number) => round((c * 9) / 5 + 32)
+
+const farenheitState = atom({
+    key: 'fahrenheit',
+    default: 32,
 })
 
-const profileState = selectorFamily({
-    key: 'profile',
+// ✨ Here we have a selector that derives °C from °F
+const celciusState = selector<number>({
+    key: 'celcius',
 
-    // ✨ Get is now a function that _returns_ a selector
-    //    get function for a given parameter
-    get: (profileId: number) => {
-        // ✨ Below is the actual selector get function
-        return async () => {
-            const profile = await getProfile(profileId)
-            if (!profile) throw new Error('Profile not found')
+    get: ({get}) => {
+        // ✨ We get the °F atom value and convert it to °C
+        return farenheitToCelsius(get(farenheitState))
+    },
 
-            return profile
+    // ✨ But we also allow you to set the °C selector
+    set: ({set, reset}, celsius) => {
+        if (celsius instanceof DefaultValue) {
+            // ✨ We reset the °F atom if reset is called on the selector
+            reset(farenheitState)
+        } else {
+            // ✨ Otherwise we convert backwards to °F, and set the °F atom
+            set(farenheitState, celsiusToFarenheit(celsius))
         }
     },
 })
 
-// ✨ Profile will no longer suspend...
-const Profile = () => {
-    const currentProfileId = useRecoilValue(currentProfileIdState)
+function App() {
+    const [farenheit, setFarenheit] = useRecoilState(farenheitState)
+    // ✨ We use our selector with useRecoilState just like we would with an atom
+    const [celsius, setCelsius] = useRecoilState(celciusState)
+    const reset = useResetRecoilState(celciusState)
 
-    // ✨ ...because we swapped useRecoilValue for useRecoilValueLoadable
-    const profile = useRecoilValueLoadable(profileState(currentProfileId))
-
-    // ✨ Handle the loading state
-    if (profile.state === 'loading') {
-        return <div>Loading</div>
-    }
-
-    // ✨ Handle the error state
-    if (profile.state === 'hasError') {
-        const error = profile.contents
-        return <div>Error {error.message}</div>
-    }
-
-    // ✨ Finally, handle the loaded state
     return (
         <div>
-            <div>ID: {profile.contents.id}</div>
-            <div>Name: {profile.contents.name}</div>
-            <div>Twitter: {profile.contents.twitter}</div>
-            <div>Website: {profile.contents.website}</div>
+            <div>
+                {/* ✨ Now we can set and display the temperature in °F... */}
+                <TemperatureInput label="F" value={farenheit} onChange={(f) => setFarenheit(f)} />
+            </div>
+
+            <div>
+                {/* ✨ ...and get (AND SET!) the temperature in °C... */}
+                <TemperatureInput label="C" value={celsius} onChange={(c) => setCelsius(c)} />
+            </div>
+
+            {/* ✨ ...and we even support useResetRecoilState ;) */}
+            <button onClick={() => reset()}>Reset Temperature</button>
         </div>
     )
 }
 
-function App() {
-    const currentProfileId = useRecoilValue(currentProfileIdState)
-
-    const nextProfile = useRecoilCallback(({snapshot, set}) => (profileId: number) => {
-        // ✨ Create the new selector instance
-        //    to start fetching new profile.
-        snapshot.getLoadable(profileState(profileId))
-
-        // ✨ Change the currentProfileId to start
-        //    rendering the new profile page.
-        set(currentProfileIdState, profileId)
-    })
-
+const TemperatureInput = ({value, onChange, label}: {value: number; onChange: (v: number) => void; label: string}) => {
     return (
         <div>
-            <Suspense fallback={<div>Loading</div>}>
-                <Profile />
-            </Suspense>
-            <button onClick={() => nextProfile(currentProfileId + 1)}>Next Profile</button>
+            {label}
+            <input value={value} onChange={(e) => onChange(parseInt(e.target.value))} />
         </div>
     )
 }
