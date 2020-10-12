@@ -1,6 +1,6 @@
 import React from 'react'
-import './App.css'
 import {atom, DefaultValue, selector, useRecoilState, useResetRecoilState} from 'recoil'
+import {AppContainer, Button, Input, InputLabel} from './ui'
 
 const round = (n: number) => Math.round(n * 100) / 100
 const fahrenheitToCelsius = (f: number) => round(((f - 32) * 5) / 9)
@@ -39,28 +39,24 @@ function App() {
     const reset = useResetRecoilState(celsiusState)
 
     return (
-        <div>
-            <div>
-                {/* ✨ Now we can set and display the temperature in °F... */}
-                <TemperatureInput label="F" value={farenheit} onChange={(f) => setFarenheit(f)} />
-            </div>
+        <AppContainer>
+            {/* ✨ Now we can set and display the temperature in °F... */}
+            <TemperatureInput label="Fahrenheit" value={farenheit} onChange={(f) => setFarenheit(f)} />
 
-            <div>
-                {/* ✨ ...and get (AND SET!) the temperature in °C... */}
-                <TemperatureInput label="C" value={celsius} onChange={(c) => setCelsius(c)} />
-            </div>
+            {/* ✨ ...and get (AND SET!) the temperature in °C... */}
+            <TemperatureInput label="Celsius" value={celsius} onChange={(c) => setCelsius(c)} />
 
             {/* ✨ ...and we even support useResetRecoilState ;) */}
-            <button onClick={() => reset()}>Reset Temperature</button>
-        </div>
+            <Button onClick={() => reset()}>Reset Temperature</Button>
+        </AppContainer>
     )
 }
 
 const TemperatureInput = ({value, onChange, label}: {value: number; onChange: (v: number) => void; label: string}) => {
     return (
-        <div>
-            {label}
-            <input value={value} onChange={(e) => onChange(parseInt(e.target.value))} />
+        <div style={{marginBottom: 20}}>
+            <InputLabel>{label}</InputLabel>
+            <Input value={value} onChange={(e) => onChange(parseInt(e.target.value))} />
         </div>
     )
 }
