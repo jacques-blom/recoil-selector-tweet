@@ -1,6 +1,13 @@
 import React, {Suspense} from 'react'
 import './App.css'
-import {atom, selectorFamily, useRecoilCallback, useRecoilValue} from 'recoil'
+import {
+    atom,
+    selectorFamily,
+    useRecoilCallback,
+    useRecoilStateLoadable,
+    useRecoilValue,
+    useRecoilValueLoadable,
+} from 'recoil'
 import {getProfile} from './fakeApi'
 
 const currentProfileIdState = atom({
@@ -24,16 +31,31 @@ const profileState = selectorFamily({
     },
 })
 
+// ✨ Profile will no longer suspend...
 const Profile = () => {
     const currentProfileId = useRecoilValue(currentProfileIdState)
-    const profile = useRecoilValue(profileState(currentProfileId))
 
+    // ✨ ...because we swapped useRecoilValue for useRecoilValueLoadable
+    const profile = useRecoilValueLoadable(profileState(currentProfileId))
+
+    // ✨ Handle the loading state
+    if (profile.state === 'loading') {
+        return <div>Loading</div>
+    }
+
+    // ✨ Handle the error state
+    if (profile.state === 'hasError') {
+        const error = profile.contents
+        return <div>Error {error.message}</div>
+    }
+
+    // ✨ Finally, handle the loaded state
     return (
         <div>
-            <div>ID: {profile.id}</div>
-            <div>Name: {profile.name}</div>
-            <div>Twitter: {profile.twitter}</div>
-            <div>Website: {profile.website}</div>
+            <div>ID: {profile.contents.id}</div>
+            <div>Name: {profile.contents.name}</div>
+            <div>Twitter: {profile.contents.twitter}</div>
+            <div>Website: {profile.contents.website}</div>
         </div>
     )
 }
