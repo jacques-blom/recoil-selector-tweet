@@ -1,30 +1,35 @@
 import React, {Suspense} from 'react'
 import './App.css'
-import {atom, selector, useRecoilValue} from 'recoil'
+import {atom, selectorFamily, useRecoilCallback, useRecoilValue} from 'recoil'
 import {getProfile} from './fakeApi'
-import {ErrorBoundary} from 'react-error-boundary'
 
-const profileIdState = atom({
+const currentProfileIdState = atom({
     key: 'profileId',
     default: 1,
 })
 
-const profileState = selector({
+const profileState = selectorFamily({
     key: 'profile',
-    get: async ({get}) => {
-        const profileId = get(profileIdState)
 
-        const profile = await getProfile(profileId)
-        if (!profile) throw new Error('Profile not found')
+    // ✨ Get is now a function that _returns_ a selector
+    //    get function for a given parameter
+    get: (profileId: number) => {
+        // ✨ Below is the actual selector get function
+        return async () => {
+            const profile = await getProfile(profileId)
+            if (!profile) throw new Error('Profile not found')
 
-        return profile
+            return profile
+        }
     },
 })
 
-// ✨ This component will suspend while
-//    profileState's async get function resolves
 const Profile = () => {
-    const profile = useRecoilValue(profileState)
+    const currentProfileId = useRecoilValue(currentProfileIdState)
+
+    // ✨ Call profileState as a function to create/get
+    //    the selector for a specific profileId
+    const profile = useRecoilValue(profileState(currentProfileId))
 
     return (
         <div>
@@ -36,19 +41,23 @@ const Profile = () => {
     )
 }
 
-const ErrorPage = ({error}: {error?: Error}) => {
-    return <div>{error?.message}</div>
-}
-
 function App() {
+    const currentProfileId = useRecoilValue(currentProfileIdState)
+
+    const nextProfile = useRecoilCallback(({snapshot, set}) => (profileId: number) => {
+        // ✨ Create the new selector instance
+        //    to start fetching new profile.
+        snapshot.getLoadable(profileState(profileId))
+
+        // ✨ Render the new page.
+        set(currentProfileIdState, profileId)
+    })
+
     return (
-        // ✨ Use an ErrorBoundary to show an error state
-        //    if Profile throws.
-        <ErrorBoundary FallbackComponent={ErrorPage}>
-            <Suspense fallback={<div>Loading</div>}>
-                <Profile />
-            </Suspense>
-        </ErrorBoundary>
+        <Suspense fallback={<div>Loading</div>}>
+            <Profile />
+            <button onClick={() => nextProfile(currentProfileId + 1)}>Next Profile</button>
+        </Suspense>
     )
 }
 
