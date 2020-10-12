@@ -12,8 +12,8 @@ const fahrenheitState = atom({
 })
 
 // ✨ Here we have a selector that derives °C from °F
-const celciusState = selector<number>({
-    key: 'celcius',
+const celsiusState = selector<number>({
+    key: 'celsius',
 
     get: ({get}) => {
         // ✨ We get the °F atom value and convert it to °C
@@ -35,8 +35,8 @@ const celciusState = selector<number>({
 function App() {
     const [farenheit, setFarenheit] = useRecoilState(fahrenheitState)
     // ✨ We use our selector with useRecoilState just like we would with an atom
-    const [celsius, setCelsius] = useRecoilState(celciusState)
-    const reset = useResetRecoilState(celciusState)
+    const [celsius, setCelsius] = useRecoilState(celsiusState)
+    const reset = useResetRecoilState(celsiusState)
 
     return (
         <div>
