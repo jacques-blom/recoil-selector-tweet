@@ -26,9 +26,6 @@ const profileState = selectorFamily({
 
 const Profile = () => {
     const currentProfileId = useRecoilValue(currentProfileIdState)
-
-    // ✨ Call profileState as a function to create/get
-    //    the selector for a specific profileId
     const profile = useRecoilValue(profileState(currentProfileId))
 
     return (
@@ -49,15 +46,18 @@ function App() {
         //    to start fetching new profile.
         snapshot.getLoadable(profileState(profileId))
 
-        // ✨ Render the new page.
+        // ✨ Change the currentProfileId to start
+        //    rendering the new profile page.
         set(currentProfileIdState, profileId)
     })
 
     return (
-        <Suspense fallback={<div>Loading</div>}>
-            <Profile />
+        <div>
+            <Suspense fallback={<div>Loading</div>}>
+                <Profile />
+            </Suspense>
             <button onClick={() => nextProfile(currentProfileId + 1)}>Next Profile</button>
-        </Suspense>
+        </div>
     )
 }
 
