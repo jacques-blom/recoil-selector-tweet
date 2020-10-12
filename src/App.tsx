@@ -1,17 +1,10 @@
-import React, {useState} from 'react'
-import logo from './logo.svg'
+import React from 'react'
 import './App.css'
 import {atom, selector, useRecoilState, useRecoilValue} from 'recoil'
-
-const passwordState = atom({
-    key: 'password',
-    default: '',
-})
 
 const passwordLengthState = selector({
     key: 'passwordLength',
     get: ({get}) => {
-        // ✨ Use the passwordState value
         const password = get(passwordState)
         return password.length
     },
@@ -22,6 +15,11 @@ const PasswordLength = () => {
 
     return <div>Password length: {passwordLength}</div>
 }
+
+const passwordState = atom({
+    key: 'password',
+    default: '',
+})
 
 const PasswordInput = () => {
     const [password, setPassword] = useRecoilState(passwordState)
