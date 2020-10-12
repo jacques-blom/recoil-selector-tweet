@@ -2,6 +2,7 @@ import React, {Suspense} from 'react'
 import './App.css'
 import {atom, selector, useRecoilValue} from 'recoil'
 import {getProfile} from './fakeApi'
+import {ErrorBoundary} from 'react-error-boundary'
 
 const profileIdState = atom({
     key: 'profileId',
@@ -10,12 +11,12 @@ const profileIdState = atom({
 
 const profileState = selector({
     key: 'profile',
-    // ✨ The get function can be asynchronous
-    //   (i.e. it can return a Promise)
     get: async ({get}) => {
         const profileId = get(profileIdState)
 
         const profile = await getProfile(profileId)
+        if (!profile) throw new Error('Profile not found')
+
         return profile
     },
 })
@@ -35,13 +36,19 @@ const Profile = () => {
     )
 }
 
+const ErrorPage = ({error}: {error?: Error}) => {
+    return <div>{error?.message}</div>
+}
+
 function App() {
     return (
-        // ✨ Use a Suspense boundary to show a fallback while
-        //   Profile suspends.
-        <Suspense fallback={<div>Loading</div>}>
-            <Profile />
-        </Suspense>
+        // ✨ Use an ErrorBoundary to show an error state
+        //    if Profile throws.
+        <ErrorBoundary FallbackComponent={ErrorPage}>
+            <Suspense fallback={<div>Loading</div>}>
+                <Profile />
+            </Suspense>
+        </ErrorBoundary>
     )
 }
 
