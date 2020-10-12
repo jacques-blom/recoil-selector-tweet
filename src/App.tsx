@@ -1,9 +1,9 @@
 import React from 'react'
 import logo from './logo.svg'
 import './App.css'
-import {selector, useRecoilValue} from 'recoil'
+import {atom, selector, useRecoilValue} from 'recoil'
 
-const passwordLengthSelector = selector({
+const passwordLengthState = selector({
     key: 'passwordLength',
     get: () => {
         return 10
@@ -11,7 +11,7 @@ const passwordLengthSelector = selector({
 })
 
 const PasswordLength = () => {
-    const passwordLength = useRecoilValue(passwordLengthSelector)
+    const passwordLength = useRecoilValue(passwordLengthState)
 
     return (
         <div>
