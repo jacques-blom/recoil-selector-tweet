@@ -3,10 +3,10 @@ import './App.css'
 import {atom, DefaultValue, selector, useRecoilState, useResetRecoilState} from 'recoil'
 
 const round = (n: number) => Math.round(n * 100) / 100
-const farenheitToCelsius = (f: number) => round(((f - 32) * 5) / 9)
-const celsiusToFarenheit = (c: number) => round((c * 9) / 5 + 32)
+const fahrenheitToCelsius = (f: number) => round(((f - 32) * 5) / 9)
+const celsiusToFahrenheit = (c: number) => round((c * 9) / 5 + 32)
 
-const farenheitState = atom({
+const fahrenheitState = atom({
     key: 'fahrenheit',
     default: 32,
 })
@@ -17,23 +17,23 @@ const celciusState = selector<number>({
 
     get: ({get}) => {
         // ✨ We get the °F atom value and convert it to °C
-        return farenheitToCelsius(get(farenheitState))
+        return fahrenheitToCelsius(get(fahrenheitState))
     },
 
     // ✨ But we also allow you to set the °C selector
     set: ({set, reset}, celsius) => {
         if (celsius instanceof DefaultValue) {
             // ✨ We reset the °F atom if reset is called on the selector
-            reset(farenheitState)
+            reset(fahrenheitState)
         } else {
             // ✨ Otherwise we convert backwards to °F, and set the °F atom
-            set(farenheitState, celsiusToFarenheit(celsius))
+            set(fahrenheitState, celsiusToFahrenheit(celsius))
         }
     },
 })
 
 function App() {
-    const [farenheit, setFarenheit] = useRecoilState(farenheitState)
+    const [farenheit, setFarenheit] = useRecoilState(fahrenheitState)
     // ✨ We use our selector with useRecoilState just like we would with an atom
     const [celsius, setCelsius] = useRecoilState(celciusState)
     const reset = useResetRecoilState(celciusState)
